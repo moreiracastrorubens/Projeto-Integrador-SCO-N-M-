@@ -119,3 +119,21 @@ Use estas credenciais no nó **MySQL** do Node-RED:
    - `saida_manual_percent` do “Tanque 2” = `global.tanque2`
 
 Pronto! O fluxo está integrando Node-RED ↔ MySQL conforme o esperado.
+
+
+## 7. Fluxo "ProjetoIntegradorV2.json" 
+Páginas web
+1. /login: página com abas “Entrar” e “Criar conta”. No cadastro, o front envia POST /auth/register com username e password (com validações) e, se der certo, redireciona para /operador.
+2. /operador (protegida): rota verifica cookie token; se não houver, responde 302 → /login.
+A página exibe KP/KI/KD e KPIs (Tanque1, Tanque2, Vazão) e tem JS para: carregar sessão com /auth/me, fazer logout com POST /auth/logout, ler/salvar PID via /api/pid e fazer polling de 1s em /api/monitor/latest.
+3. Autenticação & sessão
+4. As rotas protegidas extraem o JWT do cookie token e validam com o jwt verify usando JWT_SECRET.
+5. O front trata /auth/me (redireciona se 401) e logout (limpa sessão e volta ao /login).
+6. APIs do operador
+7. GET /api/monitor/latest: exige cookie (função requireAuth), verifica JWT e responde JSON com tanque1, tanque2, vazao e ts (503 se variáveis globais indisponíveis).
+8. GET /api/pid: protegido; lê KP/KI/KD das globais e retorna JSON. POST /api/pid: protegido; valida numéricos, aplica limites, grava nas globais e retorna ok.
+9. Simulação de processo (dados de entrada)
+10. Um function 37 gera a cada 3s (inject) um objeto { valor1, valor2, ativo }. Um switch separa as chaves e nós change+function gravam nas globais tanque1, tanque2 e ModoOp.
+11. A vazão é simulada em SIM: atualiza global.vazao como combinação linear de valor1/valor2, gravando em global.vazao.
+
+Há debug úteis (ex.: “debug HTTP Request”) para ver payloads durante chamadas HTTP.
