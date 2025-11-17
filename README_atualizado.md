@@ -137,3 +137,26 @@ A página exibe KP/KI/KD e KPIs (Tanque1, Tanque2, Vazão) e tem JS para: carreg
 11. A vazão é simulada em SIM: atualiza global.vazao como combinação linear de valor1/valor2, gravando em global.vazao.
 
 Há debug úteis (ex.: “debug HTTP Request”) para ver payloads durante chamadas HTTP.
+
+
+## 8. Sistema de Logs e Coleta de Dados
+
+Para atender aos requisitos de registro de interações e recebimento de dados, o sistema agora inclui duas rotas principais de coleta e uma nova tabela de logs.
+
+### A. Coleta de Dados do ESP32 (Tabela `historicodados`)
+
+O Node-RED agora expõe um *endpoint* dedicado para o ESP32 enviar os dados dos sensores. Os dados recebidos são registrados na tabela `historicodados`.
+
+* **Endpoint:** `POST /api/esp32/data`
+* **Formato Esperado:** JSON
+
+O ESP32 deve enviar um JSON contendo os seguintes campos. O único campo obrigatório é `malha_id` (1 ou 2). Os outros podem ser enviados ou omitidos (serão gravados como `NULL`).
+
+**Exemplo de JSON que o ESP32 deve enviar:**
+```json
+{
+  "malha_id": 1,
+  "nivel_sensor_medido": 12.3,
+  "saida_atuador_calculada": 45.0,
+  "setpoint_no_momento": 15.0
+}

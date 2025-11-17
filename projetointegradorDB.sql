@@ -105,3 +105,23 @@ ALTER USER 'PIntegrador'@'127.0.0.1' IDENTIFIED BY 'BancoDados';
 GRANT SELECT, INSERT, UPDATE, DELETE ON `projetointegrador`.* TO 'PIntegrador'@'localhost';
 GRANT SELECT, INSERT, UPDATE, DELETE ON `projetointegrador`.* TO 'PIntegrador'@'127.0.0.1';
 FLUSH PRIVILEGES;
+
+-- ===========================
+-- Tabela: logs_atividades
+-- ===========================
+CREATE TABLE `logs_atividades` (
+  `log_id` BIGINT NOT NULL AUTO_INCREMENT,
+  `timestamp` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `categoria` ENUM('auth', 'comando', 'erro', 'sistema') NOT NULL,
+  `evento` VARCHAR(50) NOT NULL,
+  `detalhes` VARCHAR(512) DEFAULT NULL,
+  `usuario_id` INT DEFAULT NULL,
+  `ip_origem` VARCHAR(45) DEFAULT NULL,
+  PRIMARY KEY (`log_id`),
+  KEY `idx_logs_categoria` (`categoria`),
+  KEY `idx_logs_usuario` (`usuario_id`),
+  CONSTRAINT `fk_logs_usuario`
+    FOREIGN KEY (`usuario_id`)
+    REFERENCES `usuarios` (`usuario_id`)
+    ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
