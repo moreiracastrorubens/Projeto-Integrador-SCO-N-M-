@@ -161,6 +161,7 @@ O ESP32 deve enviar um JSON contendo os seguintes campos. O único campo obrigat
   "setpoint_no_momento": 15.0
 }
 
+```
 ## 9. Controle de Acesso e Administração
 
 O sistema agora possui segurança baseada em cargos (RBAC) e registro de atividades.
