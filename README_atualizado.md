@@ -160,3 +160,19 @@ O ESP32 deve enviar um JSON contendo os seguintes campos. O único campo obrigat
   "saida_atuador_calculada": 45.0,
   "setpoint_no_momento": 15.0
 }
+
+## 9. Controle de Acesso e Administração
+
+O sistema agora possui segurança baseada em cargos (RBAC) e registro de atividades.
+
+### Níveis de Permissão
+* **Visualizador (Padrão):** Apenas monitora os dados dos sensores. Não pode alterar configurações.
+* **Editor (Operador):** Além de monitorar, tem permissão para alterar os parâmetros de controle (PID).
+* **Admin:** Acesso total. Pode gerenciar outros usuários e auditar o sistema.
+
+### Painel do Administrador (`/admin`)
+Acessível via botão exclusivo no dashboard principal. Permite:
+* **Gerenciar Usuários:** Alterar o nível de acesso (promover/rebaixar) ou excluir contas.
+* **Logs de Auditoria:** Visualizar o histórico de ações críticas (ex: quem alterou um PID ou quem excluiu um usuário).
+
+IMPORTANTE: Foi criado para implementação dessas funções um fluxo secundário, separado do fluxo principal (chamado Funções Admin ou só Admin), lá estão os blocos que criam esses níveis de acesso.
