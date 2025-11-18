@@ -114,59 +114,62 @@ Este teste valida o envio de comandos do operador para o banco de dados.
 
 ---
 
-## 5. Referência: Detalhes do Fluxo "ProjetoIntegradorV2.json"
+## 7. Fluxo "ProjetoIntegradorV2.json" 
+Páginas web
+1. /login: página com abas “Entrar” e “Criar conta”. No cadastro, o front envia POST /auth/register com username e password (com validações) e, se der certo, redireciona para /operador.
+2. /operador (protegida): rota verifica cookie token; se não houver, responde 302 → /login.
+A página exibe KP/KI/KD e KPIs (Tanque1, Tanque2, Vazão) e tem JS para: carregar sessão com /auth/me, fazer logout com POST /auth/logout, ler/salvar PID via /api/pid e fazer polling de 1s em /api/monitor/latest.
+3. Autenticação & sessão
+4. As rotas protegidas extraem o JWT do cookie token e validam com o jwt verify usando JWT_SECRET.
+5. O front trata /auth/me (redireciona se 401) e logout (limpa sessão e volta ao /login).
+6. APIs do operador
+7. GET /api/monitor/latest: exige cookie (função requireAuth), verifica JWT e responde JSON com tanque1, tanque2, vazao e ts (503 se variáveis globais indisponíveis).
+8. GET /api/pid: protegido; lê KP/KI/KD das globais e retorna JSON. POST /api/pid: protegido; valida numéricos, aplica limites, grava nas globais e retorna ok.
+9. Simulação de processo (dados de entrada)
+10. Um function 37 gera a cada 3s (inject) um objeto { valor1, valor2, ativo }. Um switch separa as chaves e nós change+function gravam nas globais tanque1, tanque2 e ModoOp.
+11. A vazão é simulada em SIM: atualiza global.vazao como combinação linear de valor1/valor2, gravando em global.vazao.
 
-Esta seção detalha o funcionamento interno dos fluxos.
+Há debug úteis (ex.: “debug HTTP Request”) para ver payloads durante chamadas HTTP.
 
-### 5.1. Páginas web e Autenticação (Antiga Seção 7)
-1.  **/login:** página com abas “Entrar” e “Criar conta”. No cadastro, o front envia POST /auth/register com username e password (com validações) e, se der certo, redireciona para /operador.
-2.  **/operador (protegida):** rota verifica cookie token; se não houver, responde 302 $\rightarrow$ /login.
-3.  **Dashboard:** A página exibe KP/KI/KD e KPIs (Tanque1, Tanque2, Vazão) e tem JS para: carregar sessão com /auth/me, fazer logout com POST /auth/logout, ler/salvar PID via /api/pid e fazer polling de 1s em /api/monitor/latest.
-4.  **Autenticação & sessão:** As rotas protegidas extraem o JWT do cookie token e validam com o jwt verify usando JWT_SECRET.
-5.  **APIs do operador:**
-    * `GET /api/monitor/latest`: exige cookie (função requireAuth), verifica JWT e responde JSON com tanque1, tanque2, vazao e ts (503 se variáveis globais indisponíveis).
-    * `GET /api/pid`: protegido; lê KP/KI/KD das globais e retorna JSON.
-    * `POST /api/pid`: (Ver Seção 5.3 abaixo).
-6.  **Simulação de processo (dados de entrada):**
-    * Um function 37 gera a cada 3s (inject) um objeto { valor1, valor2, ativo }. Um switch separa as chaves e nós change+function gravam nas globais tanque1, tanque2 e ModoOp.
-    * A vazão é simulada em SIM: atualiza global.vazao como combinação linear de valor1/valor2, gravando em global.vazao.
 
-### 5.2. Sistema de Logs e Coleta de Dados (Antiga Seção 8 - ATUALIZADA)
+## 8. Sistema de Logs e Coleta de Dados
 
-O sistema inclui rotas de coleta e tabelas de log.
+Para atender aos requisitos de registro de interações e recebimento de dados, o sistema agora inclui duas rotas principais de coleta e uma nova tabela de logs.
 
-**A. Coleta de Dados do ESP32 (Tabela `historicodados`)**
+### A. Coleta de Dados do ESP32 (Tabela `historicodados`)
+
+O Node-RED agora expõe um *endpoint* dedicado para o ESP32 enviar os dados dos sensores. Os dados recebidos são registrados na tabela `historicodados`.
+
 * **Endpoint:** `POST /api/esp32/data`
-* **Lógica:** Recebe um JSON do ESP32 (ou do simulador). O nó `[Validar e Montar SQL ESP32]` executa:
-    1.  Validação dos dados numéricos.
-    2.  Codificação Base64 (usando `Buffer.from().toString('base64')`) dos valores.
-    3.  Um `INSERT` na tabela `historicodados` que salva *ambos* os valores: o numérico (ex: `nivel_sensor_medido`) e o codificado (ex: `nivel_sensor_medido_crip`).
-* **Formato Esperado (JSON):**
-    ```json
-    {
-      "malha_id": 1,
-      "nivel_sensor_medido": 12.3,
-      "saida_atuador_calculada": 45.0,
-      "setpoint_no_momento": 15.0
-    }
-    ```
+* **Formato Esperado:** JSON
 
-**B. Registro de Logs de Atividade (Tabela `logs`)**
-* Um subfluxo centralizado ("Gravar Log") é usado para registrar eventos discretos (login, erros, comandos) na tabela `logs`.
-* O fluxo `POST /api/pid` chama este log, salvando os `detalhes` do PID que foi alterado.
+O ESP32 deve enviar um JSON contendo os seguintes campos. O único campo obrigatório é `malha_id` (1 ou 2). Os outros podem ser enviados ou omitidos (serão gravados como `NULL`).
 
-**C. Registro de Comandos (Tabela `commands`)**
-* **Endpoint:** `POST /api/pid`
-* **Lógica:** Além de salvar nas globais e nos logs, este fluxo agora insere uma nova linha na tabela `commands` com `status: 'pendente'`. Isso armazena o comando para que o ESP32 possa lê-lo.
+**Exemplo de JSON que o ESP32 deve enviar:**
+```json
+{
+  "malha_id": 1,
+  "nivel_sensor_medido": 12.3,
+  "saida_atuador_calculada": 45.0,
+  "setpoint_no_momento": 15.0
+}
 
-### 5.3. Controle de Acesso e Administração (Antiga Seção 9)
-* **Níveis de Permissão:** Visualizador (padrão), Editor (Operador) e Admin.
-* **Editor (Operador):** Pode alterar os parâmetros de controle (PID).
-* **Admin:** Acesso total, incluindo gerenciamento de usuários e visualização de logs de auditoria.
+```
+## 9. Controle de Acesso e Administração
 
----
+O sistema agora possui segurança baseada em cargos (RBAC) e registro de atividades.
 
-## 6. Para um ESP32 Real (Próximos Passos)
+### Níveis de Permissão
+* **Visualizador (Padrão):** Apenas monitora os dados dos sensores. Não pode alterar configurações.
+* **Editor (Operador):** Além de monitorar, tem permissão para alterar os parâmetros de controle (PID).
+* **Admin:** Acesso total. Pode gerenciar outros usuários e auditar o sistema.
+
+### Painel do Administrador (`/admin`)
+Acessível via botão exclusivo no dashboard principal. Permite:
+* **Gerenciar Usuários:** Alterar o nível de acesso (promover/rebaixar) ou excluir contas.
+* **Logs de Auditoria:** Visualizar o histórico de ações críticas (ex: quem alterou um PID ou quem excluiu um usuário).
+
+IMPORTANTE: Foi criado para implementação dessas funções um fluxo secundário, separado do fluxo principal (chamado Funções Admin ou só Admin), lá estão os blocos que criam esses níveis de acesso.## 6. Para um ESP32 Real (Próximos Passos)
 
 Quando for usar um ESP32 real, a configuração é esta:
 
