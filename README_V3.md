@@ -169,9 +169,10 @@ Acessível via botão exclusivo no dashboard principal. Permite:
 * **Gerenciar Usuários:** Alterar o nível de acesso (promover/rebaixar) ou excluir contas.
 * **Logs de Auditoria:** Visualizar o histórico de ações críticas (ex: quem alterou um PID ou quem excluiu um usuário).
 
-IMPORTANTE: Foi criado para implementação dessas funções um fluxo secundário, separado do fluxo principal (chamado Funções Admin ou só Admin), lá estão os blocos que criam esses níveis de acesso.## 6. Para um ESP32 Real (Próximos Passos)
+IMPORTANTE: Foi criado para implementação dessas funções um fluxo secundário, separado do fluxo principal (chamado Funções Admin ou só Admin), lá estão os blocos que criam esses níveis de acesso.
 
-Quando for usar um ESP32 real, a configuração é esta:
+
+## 10. Para um ESP32 Real (Próximos Passos)
 
 1.  **Descubra o IP do seu PC:**
     * Abra o **CMD** e digite `ipconfig`.
