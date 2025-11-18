@@ -12,7 +12,7 @@ Você precisa de um PC com XAMPP para atuar como servidor.
     * Abra `http://localhost/phpmyadmin` no navegador.
     * Clique em "Novo" (New), crie um banco de dados chamado `projetointegrador`.
     * Clique no banco `projetointegrador` (na esquerda), vá na aba "Importar".
-    * Escolha o arquivo `projetointegrador.sql` **deste repositório**. A versão mais recente é essencial, pois contém as tabelas `commands`, `logs` e as colunas `_crip` em `historicodados`.
+    * Escolha o arquivo **`projetointegradorDB_V3.sql` deste repositório**. A versão mais recente é essencial, pois contém as tabelas `commands`, `logs` e as colunas `_crip` em `historicodados`.
     * Clique em "Executar".
 
 **Seu servidor de banco de dados está pronto.**
@@ -43,7 +43,7 @@ O back-end (API, dashboard, lógica) é inteiramente controlado pelo Node-RED.
 4.  **Importe o Fluxo:**
     * Abra o Node-RED no seu navegador (geralmente `http://localhost:1880`).
     * Clique no menu "hambúrguer" (☰) no canto superior direito $\rightarrow$ **Importar**.
-    * Clique em "Selecionar um arquivo para importar" e escolha o arquivo `.json` mais recente deste repositório (ex: `ProjetoIntegradorV2.json`).
+    * Clique em "Selecionar um arquivo para importar" e escolha o arquivo `.json` mais recente deste repositório **(`flows_V3.json`)**.
     * Clique em **Importar**.
 5.  **Configure as Credenciais do Banco (Seção 5):**
     * No Node-RED, encontre qualquer nó MySQL (laranja, ex: `[Gravar em 'commands']`).
@@ -69,7 +69,7 @@ Use estas credenciais nos nós **MySQL** do Node-RED:
 
 ---
 
-## 4. Como Testar o Sistema V2 Completo (End-to-End)
+## 4. Como Testar o Sistema V3 Completo (End-to-End)
 
 Siga estes passos para validar a comunicação bidirecional simulada.
 
